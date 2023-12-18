@@ -124,7 +124,6 @@ public:
     {
         return size == 0;
     }
-
     T operator[](int index)
     {
         if (index < 0 || index >= size)
@@ -140,6 +139,8 @@ public:
     }
     void reverse()
     {
+        // 1 -> 2 -> 3 -> 4 -> 5
+        // 5 -> 4 -> 3 -> 2 -> 1
         Node<T> *prev = NULL;
         Node<T> *curr = head;
         Node<T> *next = NULL;

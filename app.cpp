@@ -10,16 +10,16 @@ class Graph
 
 public:
     int numVertices;
-    LinkedList<int> adjList[1000];
+    LinkedList<pair<int, int>> adjList[1000];
 
     Graph(int numVertices)
     {
         this->numVertices = numVertices;
     }
 
-    void addEdge(int a, int b)
+    void addEdge(int a, int b, int w)
     {
-        adjList[a].push_back(b);
+        adjList[a].push_back({b, w});
     }
 
     void printGraph()
@@ -29,27 +29,17 @@ public:
             cout << i << " --> ";
             for (int j = 0; j < adjList[i].getSize(); j++)
             {
-                cout << adjList[i][j] << " ";
+                cout << adjList[i][j].first << " "
+                     << " " << adjList[i][j].second << " | ";
             }
             cout << endl;
         }
     }
 
-    LinkedList<int> shortestPath(int src, int dir)
+    pair<LinkedList<int>, int> shortestPath(int src, int dir)
     {
-        src++, dir++;
 
         int n = numVertices;
-
-        LinkedList<pair<int, int>> adj[n + 1];
-        for (int i = 0; i < numVertices; i++)
-        {
-            for (int j = 0; j < adjList[i].getSize(); j++)
-            {
-                adj[i + 1].push_back({adjList[i][j] + 1, 1});
-                adj[adjList[i][j] + 1].push_back({i + 1, 1});
-            }
-        }
 
         MinHeap<pair<int, int>> pq;
 
@@ -74,10 +64,10 @@ public:
             int node = it.second;
             int dis = it.first;
 
-            for (int i = 0; i < adj[node].getSize(); i++)
+            for (int i = 0; i < adjList[node].getSize(); i++)
             {
-                int adjNode = adj[node][i].first;
-                int edW = adj[node][i].second;
+                int adjNode = adjList[node][i].first;
+                int edW = adjList[node][i].second;
 
                 if (dis + edW < dist[adjNode])
                 {
@@ -106,7 +96,7 @@ public:
         path.push_back(src);
 
         path.reverse();
-        return path;
+        return {path, dist[dir]};
 
         return {};
     }
@@ -115,7 +105,7 @@ public:
 class Application
 {
     string airbase[1000];
-    pair<string, string> flights[1000];
+    pair<string, pair<string, int>> flights[1000];
     int airbasesNumber;
     int availableFlightsNumber;
     bool isTwoWay;
@@ -137,17 +127,18 @@ public:
         int srcIndex = get_airbase_index(src);
         int destIndex = get_airbase_index(dest);
 
-        auto path = graph->shortestPath(srcIndex, destIndex);
+        auto [path, cost] = graph->shortestPath(srcIndex, destIndex);
         if (path.getSize() == 0)
             return "";
 
         string result = "";
         for (int i = 0; i < path.getSize(); i++)
         {
-            result += airbase[path[i] - 1];
+            result += airbase[path[i]];
             if (i != path.getSize() - 1)
                 result += " -> ";
         }
+        result += " (Taking: " + to_string(cost) + " Units Of Time)";
         return result;
     }
 
@@ -171,6 +162,7 @@ private:
         }
         int equaltCount = 0;
         if (not isFlight)
+        {
             for (int i = 0; i < airbasesNumber; i++)
             {
                 if (airbase[i] == name)
@@ -181,6 +173,21 @@ private:
                     return false;
                 }
             }
+        }
+        else
+        {
+            int equaltCount = 0;
+            for (int i = 0; i < availableFlightsNumber; i++)
+            {
+                if (airbase[i] == name)
+                    equaltCount++;
+            }
+            if (equaltCount != 1)
+            {
+                cout << "Invalid name. Name should be one of the available airbases" << endl;
+                return false;
+            }
+        }
         return true;
     }
 
@@ -202,7 +209,6 @@ private:
             bool valid = 0;
             while (!valid)
             {
-
                 cout << "Enter the name of Air base " << i + 1 << ": ";
                 cin >> airbase[i];
 
@@ -213,7 +219,8 @@ private:
 
     void read_flights()
     {
-        cout << "Is the flight two way? (y/n): ";
+        cout << "Is the flight two way? (y/n): "; // directed or not
+
         char ch;
         cin >> ch;
         isTwoWay = (ch == 'y');
@@ -226,10 +233,10 @@ private:
             bool valid = 0;
             while (!valid)
             {
-                cout << "Enter the source and destination of flight " << i + 1 << ": ";
-                cin >> flights[i].first >> flights[i].second;
+                cout << "Enter the source, destination, time of the " << i + 1 << "th Flight: ";
+                cin >> flights[i].first >> flights[i].second.first >> flights[i].second.second;
 
-                valid = is_valid_airbase_name(flights[i].first, 1) && is_valid_airbase_name(flights[i].second, 1);
+                valid = is_valid_airbase_name(flights[i].first, 1) && is_valid_airbase_name(flights[i].second.first, 1);
             }
         }
 
@@ -253,12 +260,12 @@ private:
         for (int i = 0; i < availableFlightsNumber; i++)
         {
             int src = get_airbase_index(flights[i].first);
-            int dest = get_airbase_index(flights[i].second);
+            int dest = get_airbase_index(flights[i].second.first);
 
-            graph->addEdge(src, dest);
+            graph->addEdge(src, dest, flights[i].second.second);
 
             if (isTwoWay)
-                graph->addEdge(dest, src);
+                graph->addEdge(dest, src, flights[i].second.second);
         }
     }
 };
@@ -289,6 +296,8 @@ int main()
         char ch;
         cin >> ch;
         userWantsToContinue = (ch == 'y');
+
+        system("clear");
     }
 
     return 0;
