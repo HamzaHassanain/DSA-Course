@@ -1,0 +1,16 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "iostream": "cpp",
+    "ostream": "cpp",
+    "array": "cpp",
+    "hash_map": "cpp",
+    "any": "cpp",
+    "string_view": "cpp",
+    "ranges": "cpp",
+    "span": "cpp",
+    "stacktrace": "cpp",
+    "regex": "cpp",
+    "vector": "cpp"
+  }
+}
